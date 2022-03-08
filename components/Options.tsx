@@ -24,6 +24,108 @@ const Options = ({ type }: IOptions) => {
   const filterId = dataList.filter((item) => checkedId.includes(item.id))
   const selectedId = filterId.map((item) => item.id)
 
+  //@ fileBlock logic
+  type MoveDirCase = 'up' | 'down' | null
+
+  const [lastClickedIdx, setLastClickedIdx] = useState<number | null>(null)
+  const [clickedList, setClickedList] = useState<number[]>([])
+  const [shiftMoveDir, setShiftMoveDir] = useState<MoveDirCase>(null)
+
+  console.log(lastClickedIdx, clickedList, shiftMoveDir)
+
+  const checkShiftMoveDir = (lastClicked: number, clickedIdx: number) => {
+    let moveDir: MoveDirCase = null
+    if (clickedIdx - lastClicked > 0) {
+      moveDir = 'down'
+    }
+
+    if (clickedIdx - lastClicked < 0) {
+      moveDir = 'up'
+    }
+
+    return moveDir
+  }
+
+  const onHandleBlock = (
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    index: number
+  ) => {
+    if (event.ctrlKey || event.metaKey) {
+      const existCheck = clickedList.findIndex((clicked) => clicked === index)
+
+      if (existCheck !== -1) {
+        const filteredList = clickedList.filter((clicked) => clicked !== index)
+        setLastClickedIdx(filteredList[filteredList.length - 1])
+        setClickedList(filteredList)
+      } else {
+        const newList = [...clickedList]
+        newList.push(index)
+        newList.sort((a, b) => a - b)
+        setClickedList(newList)
+        setLastClickedIdx(index)
+      }
+
+      //do not do code below
+      return
+    }
+
+    if (event.shiftKey) {
+      //when first shift => click all
+      if (!clickedList.length) {
+        const newList = Array(index + 1)
+          .fill(null)
+          .map((_, i) => i)
+        setClickedList(newList)
+        setLastClickedIdx(0)
+        return
+      }
+
+      //if click the same last clicked index
+      if (lastClickedIdx === index) {
+        setClickedList([index])
+        return
+      }
+
+      // common shift click case
+      const max = Math.max(lastClickedIdx as number, index)
+      const min = Math.min(lastClickedIdx as number, index)
+
+      const newList = Array(max - min + 1)
+        .fill(null)
+        .map((_, i) => min + i)
+
+      if (!shiftMoveDir) {
+        const set = Array.from(new Set([...clickedList, ...newList]))
+        const moveDir = checkShiftMoveDir(lastClickedIdx as number, index)
+
+        setClickedList(set)
+        setShiftMoveDir(moveDir)
+
+        return
+      }
+
+      if (shiftMoveDir) {
+        const set = Array.from(new Set([...clickedList, ...newList]))
+        const moveDir = checkShiftMoveDir(lastClickedIdx as number, index)
+
+        if (moveDir === shiftMoveDir) {
+          setClickedList(set)
+        } else {
+          setClickedList(newList)
+          setShiftMoveDir(moveDir)
+        }
+      }
+
+      //do not do code below
+      return
+    }
+
+    //single click
+    setClickedList([index])
+    setLastClickedIdx(index)
+  }
+  console.log(clickedList, lastClickedIdx)
+
   return (
     <ListWrapper>
       {option.search && <SearchBar />}
@@ -46,15 +148,17 @@ const Options = ({ type }: IOptions) => {
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
-                        onClick={(event) => {
-                          if (event.ctrlKey || event.metaKey) {
-                            setCheckedId([...checkedId, el.id])
-                            setCheckedColor(!checkedColor)
-                          }
-                        }}
+                        onClick={(event) => onHandleBlock(event, index)}
                         checkedColor={checkedColor}
                         id={el.id}
                         selectedId={selectedId}
+                        className={
+                          clickedList.findIndex(
+                            (clicked) => clicked === index
+                          ) !== -1
+                            ? 'highlight'
+                            : ''
+                        }
                       >
                         <ListContent className={`${option.itemSize}`}>
                           <span>{el.emoji}</span>
@@ -147,6 +251,12 @@ const SingleList = styled.div<CssProps>`
         ? 'transform: scaleY(1)'
         : 'transform: scaleY(0)'
     }}
+  }
+
+  &.highlight {
+    &:before {
+      transform: scaleY(1);
+    }
   }
 
   &:hover {

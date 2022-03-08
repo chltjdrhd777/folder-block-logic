@@ -1,184 +1,75 @@
-## 📑 프로젝트 소개
+![block](https://user-images.githubusercontent.com/58500558/157206258-f6a612e0-8865-48c8-b713-f2bf5fe77d9c.gif)
 
-WANTED & CODESTATES 프리온보딩 코스
+> 별거 아니라고 생각했던 너, 너는 나에게 모욕감을 줬어
 
-TEAM 8 팀기업과제 3번 입니다.
+### 🚨 1. 기록의 이유
 
-<br>
+처음에 아주 간단하리라고 생각했던 파인더 폴더블록구조였으나 상당히 많은 로직이 존재하는 것에 고통을 느끼며 만들었다.
 
-### < 데이터블 >
+가장 어렵게 되는 부분이 클릭, ctrl+클릭, shift+클릭 의 과정이 모두 연동이 되기 때문에 경우의 수를 아주 잘 구분해서 만들어줘야 한다는 점에서 몹시 어려웠고,
 
-PROJECT PERIOD: 2022.03.07 ~ 2022.03.08
+조금만 틀어져도 에러로 이어지는 연결구조 덕택에 다시 구현하라고 하면 시간이 너무 낭비될 것 같으므로 참고자료로 남겨두는 기록이다.
 
-<br>
+### 🚨 2. 주요 사항
 
-[배포링크]
+우선 메인이 되는 컴포넌트는 아래의 하이라이트 부분과 같다
 
-<br>
+<img width="304" alt="스크린샷 2022-03-08 오후 6 54 40" src="https://user-images.githubusercontent.com/58500558/157212633-43179b97-696a-41b4-ac10-7bccc4bbbf26.png">
 
-## ✨ 주요 기능
+해당 폴더 내에 메인 상태는 크게 3가지로 나누어진다
 
--
--
+<img width="717" alt="스크린샷 2022-03-08 오후 6 14 55" src="https://user-images.githubusercontent.com/58500558/157212994-3cab913a-ba7b-400a-bb24-a1e8f316a02d.png">
 
-<br>
+1. lastClickedIdx : 폴더 블록 구조 특성상, 일반클릭, ctrl+클릭은 해당 클릭이 되는 요소의 마지막 index를 추적하고 있어야 하기 때문에 만든 상태이다.
 
-### 🧔 메인
+2. clickedList : 클릭이 되어 하이라이트가 되야하는 대상들을 모은 상태이다.
 
-<br>
+3. shiftMoveDir : shift+클릭을 할 경우, 마지막 클릭으로 치부되지 않지만 동일한 방향으로 클릭을 했느냐 아니면 반대방향으로 클릭을 했느냐에 따라 기존의 리스트 내용 + 추가내용을 해야하는지, 아니면 완전히 새로 초기화하고 반대편 방향으로까지의 리스트를 업데이트해야하는지가 결정되므로 만든 상태이다.
 
-### 구현한 기능 목록 및 어려웠던 점
+> 이를 기반으로, 아주 섬세하게 상태를 분류하면서 업데이트 로직을 짜야 한다.
 
-<br>
+---
 
-<br>
+### case a. 오로지 일반 클릭만 할 경우
 
-[ 김혜영 ]
+이 경우에는 클릭된 리스트 배열에 오로지 단 하나, 클릭된 자신의 아이템만 남게 되므로 가장 최하단에 해당 상태 업데이트를 만들어두었다.
 
-- 구현 내용 & 방법
-- 구현하면서 어려웠던 점
+<img width="369" alt="스크린샷 2022-03-08 오후 7 01 58" src="https://user-images.githubusercontent.com/58500558/157213889-869b7a41-1fc3-4936-af41-4d417e7e7d50.png">
 
-<br>
+### case b. ctrl + 클릭을 할 경우
 
-<br>
+일단, 기본적으로 맥북은 ctrl이 아닌 command키로 값이 전달되므로 두 경우의 수를 가져가야 한다. _"event.ctrlKey"_ , _"event.metaKey"_
 
-[ 김희진 ]
+그러고 난 후, ctrl+클릭의 케이스를 보면 만약 클릭을 했는데 리스트에 없는 경우와 클릭을 했는데 이미 리스트에 있는 경우로 나눠야 한다.
 
-- 구현 내용 & 방법
+- 만약 존재한다면, 폴더 구조로 확인해보면 클릭된 리스트를 필터해서 없애고, 마지막으로 클릭된 요소를 해당 클릭된 리스트의 가장 끝부분으로 설정되는 것을 확인하였다.
 
-- 구현하면서 어려웠던 점
+<img width="548" alt="스크린샷 2022-03-08 오후 7 04 55" src="https://user-images.githubusercontent.com/58500558/157214373-d3824351-9a7f-4262-a8dc-4c25766c1d9c.png">
 
-<br>
+- 만약 존재하지 않는다면, 기존 배열을 복사해 push한 후, 순서를 재배열한 뒤에 이것을 상태업데이트하면된다. 그리고 가장 마지막에 클릭된 대상을 추적하는 상태업데이트도 같이 진행한다.
 
-[ 최우철 ]
+<img width="377" alt="스크린샷 2022-03-08 오후 7 06 15" src="https://user-images.githubusercontent.com/58500558/157214590-3e70fe20-9dcb-4237-8ccf-407d91b13038.png">
 
-- 구현 내용 & 방법
-- 구현하면서 어려웠던 점
+> 참고로, 해당 케이스에서 if중첩으로 깊어지는 것을 피하기 위해 일부러 return을 통해 하단에 있는 구조는 실행하지 않도록 만들어두었다.
 
-<br>
+### case C. shift+클릭을 한 경우
 
-[ 이승우 ]
+정말 이때가 분기점이 많아지기 시작한다.
 
-- 구현 내용 & 방법
+- 만약 아무것도 클릭된 리스트가 없는데 중간에 클릭된다면, 거기까지 모두 클릭되고 마지막으로 클릭된 idx를 0번째로 설정해야 한다
 
-- 구현하면서 어려웠던 점
+<img width="426" alt="스크린샷 2022-03-08 오후 7 09 43" src="https://user-images.githubusercontent.com/58500558/157215197-a97d8f49-8b74-4917-81c7-d811fd57fde8.png">
 
-<br>
+- 만약 마지막으로 클릭된 인덱스와 동일한 인덱스를 누른다면 해당 인덱스를 제외하고 리스트를 비운다.
+  <img width="385" alt="스크린샷 2022-03-08 오후 7 28 32" src="https://user-images.githubusercontent.com/58500558/157218303-4a97e31a-2b8d-4bf3-8bdd-fa6eff2c2172.png">
 
-<br>
+- 그 외에는 shift를 누르고 일정 범위를 선택하는 케이스이다. 이때 중요한것은, 동일 방향으로 클릭해서 움직일 경우라면 기존것과 함께 추가가 되야하지만, 반대방향으로 클릭해서 움직인다면 기존의 것들을 초기화하고 새롭게 범위가 지정된 만큼만 설정되야 한다.
 
-[ 김진기 ]
+> 따라서 이것을 위해 선택했을 당시의 인덱스와 저장되어 있던 마지막 클릭 인덱스를 비교해서 최대값과 최솟값을 분리하고, shift이동방향에 대한 자료구조를 확인해서 같은 방향이면 기존것을 복사하면서 업데이트하고, 아니라면 그냥 최댓값과 최솟값 사이로 이루어진 배열을 업데이트시키면 된다.
 
-- 구현 내용 & 방법
+<img width="655" alt="스크린샷 2022-03-08 오후 7 32 43" src="https://user-images.githubusercontent.com/58500558/157219056-00e5eca6-df8b-4428-8eee-1c6b60d105ff.png">
 
-- 구현하면서 어려웠던 점
+### 🚨 3. 결론
 
-<br>
-
-[ 박성현 ]
-
-- 구현 내용 & 방법
-
-- 구현하면서 어려운점
-
-<br>
-
-[ 변건오 ]
-
-- 구현 내용 & 방법
-
-- 구현하면서 어려웠던 점
-
-<br>
-
-## 🗂 프로젝트 구조
-
-```
- ┣ component
- ┃ ┣ GeneratedForm
- ┃ ┃ ┣ Address.tsx
- ┃ ┃ ┣ AgreementModalView.tsx
- ┃ ┃ ┣ Attchments.tsx
- ┃ ┃ ┣ DropDown.tsx
- ┃ ┃ ┣ Name.tsx
- ┃ ┃ ┣ PhoneNum.tsx
- ┃ ┃ ┗ Policy.tsx
- ┃ ┣ Progress
- ┃ ┃ ┗ ProgressBar.tsx
- ┃ ┣ Editor.tsx
- ┃ ┣ Form.tsx
- ┃ ┣ Header.tsx
- ┃ ┣ PostCodeModal.tsx
- ┃ ┗ SingleFormList.tsx
- ┣ pages
- ┃ ┣ api
- ┃ ┃ ┗ hello.ts
- ┃ ┣ dataList
- ┃ ┃ ┗ [i].tsx
- ┃ ┣ viewForm
- ┃ ┃ ┗ [id].tsx
- ┃ ┣ _app.tsx
- ┃ ┣ _document.tsx
- ┃ ┣ forms.tsx
- ┃ ┗ index.tsx
- ┃ ┣ redux
- ┃ ┃ ┣ slice.ts
- ┃ ┃ ┗ store.ts
- ┃ ┣ types
- ┃ ┃ ┣ address.d.ts
- ┃ ┃ ┣ daum.d.ts
- ┃ ┃ ┣ image.d.ts
- ┃ ┃ ┗ styled.d.ts
- ┃ ┣ utils
- ┃ ┃ ┣ debounce.ts
- ┃ ┃ ┣ findBlank.ts
- ┃ ┃ ┣ makeStructure.ts
- ┃ ┃ ┗ useForms.js
- ┣ .babelrc
- ┣ .eslintrc.json
- ┣ next-env.d.ts
- ┣ next.config.js
- ┣ package.json
- ┣ README.md
- ┣ tsconfig.json
- ┗ yarn.lock
-```
-
-<br>
-
-## 🛠 사용 기술
-
-front-end
-
-![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E)
-![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
-![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
-![Redux](https://img.shields.io/badge/redux-%23593d88.svg?style=for-the-badge&logo=redux&logoColor=white)
-![Styled Components](https://img.shields.io/badge/styled--components-DB7093?style=for-the-badge&logo=styled-components&logoColor=white)
-![CSS3](https://img.shields.io/badge/css3-%231572B6.svg?style=for-the-badge&logo=css3&logoColor=white)
-![HTML5](https://img.shields.io/badge/html5-%23E34F26.svg?style=for-the-badge&logo=html5&logoColor=white)
-![Next JS](https://img.shields.io/badge/Next-black?style=for-the-badge&logo=next.js&logoColor=white)
-
-dev-ops
-
-![Netlify](https://img.shields.io/badge/netlify-%23000000.svg?style=for-the-badge&logo=netlify&logoColor=#00C7B7)
-
-community
-
-![Discord](https://img.shields.io/badge/%3CServer%3E-%237289DA.svg?style=for-the-badge&logo=discord&logoColor=white)
-![Git](https://img.shields.io/badge/git-%23F05033.svg?style=for-the-badge&logo=git&logoColor=white)
-![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)
-![Apple](https://img.shields.io/badge/-APPLE-black?style=for-the-badge&logo=apple)
-![Ubuntu](https://img.shields.io/badge/-UBUNTU-gray?style=for-the-badge&logo=Ubuntu)
-
-## 팀원소개
-
-|     이름     | 포지션 |                                                                  깃헙                                                                   |
-| :----------: | :----: | :-------------------------------------------------------------------------------------------------------------------------------------: |
-| 박성현(팀장) | Front  |   [![github](https://img.shields.io/badge/박성현-181717?style=flat-square&logo=GitHub&logoColor=white)](https://github.com/psh9408p)    |
-| 김희진(팀원) | Front  |  [![github](https://img.shields.io/badge/김희진-181717?style=flat-square&logo=GitHub&logoColor=white)](https://github.com/chloe41297)   |
-| 김혜영(팀원) | Front  | [![github](https://img.shields.io/badge/김혜영-181717?style=flat-square&logo=GitHub&logoColor=white)](https://github.com/hit-that-drum) |
-| 김진기(팀원) | Front  |   [![github](https://img.shields.io/badge/김진기-181717?style=flat-square&logo=GitHub&logoColor=white)](https://github.com/hatoba29)    |
-| 최우철(팀원) | Front  | [![github](https://img.shields.io/badge/최우철-181717?style=flat-square&logo=GitHub&logoColor=white)](https://github.com/chltjdrhd777/) |
-| 변건오(팀원) | Front  |    [![github](https://img.shields.io/badge/변건오-181717?style=flat-square&logo=GitHub&logoColor=white)](https://github.com/guno517)    |
-| 이승우(팀원) | Front  |   [![github](https://img.shields.io/badge/이승우-181717?style=flat-square&logo=GitHub&logoColor=white)](https://github.com/starhn87)    |
+항상 당연하게 생각하며 사용했던 기능에 이렇게까지 많은 분기점이 있을 줄은 몰랐다.
+정말로 로직을 짤 때마다 최대한 작은 케이스부터 독립적으로 분리해서 로직을 짜려고 노력했고, 그 덕택에 나름 구조적으로 이해하기 쉬운 로직을 완성했다고 생각하며 뿌듯함을 느낀다.
